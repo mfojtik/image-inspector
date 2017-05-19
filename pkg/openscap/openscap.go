@@ -177,25 +177,25 @@ func (s *defaultOSCAPScanner) oscapChroot(oscapArgs ...string) ([]byte, error) {
 	return out, err
 }
 
-func (s *defaultOSCAPScanner) Scan(mountPath string, image *docker.Image) error {
+func (s *defaultOSCAPScanner) Scan(mountPath string, image *docker.Image) ([]iiapi.Result, error) {
 	fi, err := os.Stat(mountPath)
 	if err != nil || os.IsNotExist(err) || !fi.IsDir() {
-		return fmt.Errorf("%s is not a directory, error: %v", mountPath, err)
+		return nil, fmt.Errorf("%s is not a directory, error: %v", mountPath, err)
 	}
 	if image == nil {
-		return fmt.Errorf("image cannot be nil")
+		return nil, fmt.Errorf("image cannot be nil")
 	}
 	s.image = image
 	s.imageMountPath = mountPath
 
 	rhelDist, err := s.rhelDist()
 	if err != nil {
-		return fmt.Errorf("Unable to get RHEL distribution number: %v\n", err)
+		return nil, fmt.Errorf("Unable to get RHEL distribution number: %v\n", err)
 	}
 
 	cveFileName, err := s.inputCVE(rhelDist)
 	if err != nil {
-		return fmt.Errorf("Unable to retreive the CVE file: %v\n", err)
+		return nil, fmt.Errorf("Unable to retreive the CVE file: %v\n", err)
 	}
 
 	args := []string{"xccdf", "eval", "--results-arf", s.ResultsFileName()}
@@ -208,7 +208,7 @@ func (s *defaultOSCAPScanner) Scan(mountPath string, image *docker.Image) error 
 
 	_, err = s.chrootOscap(args...)
 
-	return err
+	return nil, err
 
 }
 

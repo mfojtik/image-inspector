@@ -18,6 +18,7 @@ func main() {
 	flag.StringVar(&inspectorOptions.DstPath, "path", inspectorOptions.DstPath, "Destination path for the image files")
 	flag.StringVar(&inspectorOptions.Serve, "serve", inspectorOptions.Serve, "Host and port where to serve the image with webdav")
 	flag.BoolVar(&inspectorOptions.Chroot, "chroot", inspectorOptions.Chroot, "Change root when serving the image with webdav")
+	flag.BoolVar(&inspectorOptions.Local, "local", inspectorOptions.Local, "If set the image wont be pulled but instead the -path will be used")
 	flag.Var(&inspectorOptions.DockerCfg, "dockercfg", "Location of the docker configuration files. May be specified more than once")
 	flag.StringVar(&inspectorOptions.Username, "username", inspectorOptions.Username, "username for authenticating with the docker registry")
 	flag.StringVar(&inspectorOptions.PasswordFile, "password-file", inspectorOptions.PasswordFile, "Location of a file that contains the password for authentication with the docker registry")
@@ -25,6 +26,7 @@ func main() {
 	flag.StringVar(&inspectorOptions.ScanResultsDir, "scan-results-dir", inspectorOptions.ScanResultsDir, "The directory that will contain the results of the scan")
 	flag.BoolVar(&inspectorOptions.OpenScapHTML, "openscap-html-report", inspectorOptions.OpenScapHTML, "Generate an OpenScap HTML report in addition to the ARF formatted report")
 	flag.StringVar(&inspectorOptions.CVEUrlPath, "cve-url", inspectorOptions.CVEUrlPath, "An alternative URL source for CVE files")
+	flag.StringVar(&inspectorOptions.ClamSocket, "clam-socket", inspectorOptions.ClamSocket, "Location of clamav socket file (default: '')")
 	flag.StringVar(&inspectorOptions.PostResultURL, "post-results-url", inspectorOptions.PostResultURL, "After scan finish, HTTP POST the results to this URL")
 	flag.StringVar(&inspectorOptions.PostResultTokenFile, "post-results-token-file", inspectorOptions.PostResultTokenFile, "If specified, content of it will be added to the POST result URL (?token=....)")
 

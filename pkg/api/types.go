@@ -71,7 +71,7 @@ func (osm *OpenSCAPMetadata) SetError(err error) {
 }
 
 var (
-	ScanOptions = []string{"openscap"}
+	ScanOptions = []string{"openscap", "clamav"}
 )
 
 // InspectorMetadata is the metadata type with information about image-inspector's operation
@@ -90,7 +90,7 @@ type APIVersions struct {
 // Scanner interface that all scanners should define.
 type Scanner interface {
 	// Scan will scan the image
-	Scan(string, *docker.Image) error
+	Scan(path string, image *docker.Image) ([]Result, error)
 	// ScannerName is the scanner's name
 	ScannerName() string
 	// ResultFileName returns the name of the results file

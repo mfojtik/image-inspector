@@ -40,6 +40,10 @@ type ImageInspectorOptions struct {
 	Serve string
 	// Chroot controls whether or not a chroot is excuted when serving the image with webdav.
 	Chroot bool
+	// Local controls whether or not an image should be pulled from remote registry. If set
+	// to true, the image won't be pulled and instead the DstPath will be assumed as
+	// location to scan.
+	Local bool
 	// DockerCfg is the location of the docker config file.
 	DockerCfg MultiStringVar
 	// Username is the username for authenticating to the docker registry.
@@ -57,6 +61,8 @@ type ImageInspectorOptions struct {
 	// CVEUrlPath An alternative source for the cve files
 	// TODO: Move this into openscap plugin options.
 	CVEUrlPath string
+	// ClamSocket is the location of clamav socket file
+	ClamSocket string
 	// PostResultURL represents an URL where the image-inspector should post the results of
 	// the scan.
 	PostResultURL string
@@ -81,6 +87,9 @@ func (i *ImageInspectorOptions) Validate() error {
 	}
 	if len(i.Image) == 0 {
 		return fmt.Errorf("Docker image to inspect must be specified")
+	}
+	if i.Local && len(i.DstPath) == 0 {
+		return fmt.Errorf("When scanning without pulling image a path to the image files must be specified")
 	}
 	if len(i.DockerCfg.Values) > 0 && len(i.Username) > 0 {
 		return fmt.Errorf("Only specify dockercfg file or username/password pair for authentication")
@@ -110,19 +119,18 @@ func (i *ImageInspectorOptions) Validate() error {
 			}
 		}
 	}
-	if len(i.ScanType) > 0 {
-		var found bool = false
-		for _, opt := range iiapi.ScanOptions {
-			if i.ScanType == opt {
-				found = true
-				break
-			}
+	// A valid scan-type must be specified.
+	var found bool = false
+	for _, opt := range iiapi.ScanOptions {
+		if i.ScanType == opt {
+			found = true
+			break
 		}
-		if !found {
-			return fmt.Errorf("%s is not one of the available scan-types which are %v",
-				i.ScanType, iiapi.ScanOptions)
-		}
-
 	}
+	if !found {
+		return fmt.Errorf("%s is not one of the available scan-types which are %v",
+			i.ScanType, iiapi.ScanOptions)
+	}
+
 	return nil
 }

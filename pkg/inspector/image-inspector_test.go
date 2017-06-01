@@ -23,8 +23,8 @@ type SuccWithHTMLMockScanner struct {
 	SuccMockScanner
 }
 
-func (ms *FailMockScanner) Scan(string, *docker.Image) error {
-	return fmt.Errorf("FAIL SCANNER!")
+func (ms *FailMockScanner) Scan(string, *docker.Image) ([]iiapi.Result, error) {
+	return nil, fmt.Errorf("FAIL SCANNER!")
 }
 func (ms *FailMockScanner) ScannerName() string {
 	return "MockScanner"
@@ -40,8 +40,8 @@ func (ms *SuccWithHTMLMockScanner) HTMLResultsFileName() string {
 	return "image-inpector_test.go"
 }
 
-func (ms *SuccMockScanner) Scan(string, *docker.Image) error {
-	return nil
+func (ms *SuccMockScanner) Scan(string, *docker.Image) ([]iiapi.Result, error) {
+	return []iiapi.Result{}, nil
 }
 
 func (ms *NoResMockScanner) ResultsFileName() string {
@@ -65,7 +65,7 @@ func TestScanImage(t *testing.T) {
 	} {
 		v.ii.opts.DstPath = "here"
 		ii := &v.ii
-		report, htmlReport, err := ii.scanImage(v.s)
+		_, report, htmlReport, err := ii.scanImage(v.s)
 		if v.shouldFail && err == nil {
 			t.Errorf("%s should have failed but it didn't!", k)
 		}

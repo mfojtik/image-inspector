@@ -37,8 +37,10 @@ func NewWebdavImageServer(opts ImageServerOptions, chroot bool) ImageServer {
 
 // ServeImage Serves the image.
 func (s *webdavImageServer) ServeImage(meta *iiapi.InspectorMetadata,
+	results iiapi.ScanResult,
 	scanReport []byte,
-	htmlScanReport []byte) error {
+	htmlScanReport []byte,
+) error {
 
 	servePath := s.opts.ImageServeURL
 	if s.chroot {
@@ -74,6 +76,16 @@ func (s *webdavImageServer) ServeImage(meta *iiapi.InspectorMetadata,
 			return
 		}
 		w.Write(body)
+	})
+
+	http.HandleFunc(s.opts.ResultAPIUrlPath, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		resultJSON, err := json.Marshal(results)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(resultJSON)
 	})
 
 	http.HandleFunc(s.opts.ScanReportURL, func(w http.ResponseWriter, r *http.Request) {

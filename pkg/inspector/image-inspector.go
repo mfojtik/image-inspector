@@ -35,6 +35,7 @@ const (
 	OWNER_PERM_RW            = 0600
 	HEALTHZ_URL_PATH         = "/healthz"
 	API_URL_PREFIX           = "/api"
+	RESULT_API_URL_PATH      = "/results"
 	CONTENT_URL_PREFIX       = API_URL_PREFIX + "/" + VERSION_TAG + "/content/"
 	METADATA_URL_PATH        = API_URL_PREFIX + "/" + VERSION_TAG + "/metadata"
 	OPENSCAP_URL_PATH        = API_URL_PREFIX + "/" + VERSION_TAG + "/openscap"
@@ -87,6 +88,7 @@ func NewDefaultImageInspector(opts iicmd.ImageInspectorOptions) ImageInspector {
 			ServePath:         opts.Serve,
 			HealthzURL:        HEALTHZ_URL_PATH,
 			APIURL:            API_URL_PREFIX,
+			ResultAPIUrlPath:  RESULT_API_URL_PATH,
 			APIVersions:       iiapi.APIVersions{Versions: []string{VERSION_TAG}},
 			MetadataURL:       METADATA_URL_PATH,
 			ContentURL:        CONTENT_URL_PREFIX,
@@ -106,6 +108,8 @@ func (i *defaultImageInspector) Inspect() error {
 	var (
 		scanner iiapi.Scanner
 		err     error
+
+		scanReport, htmlScanReport []byte
 	)
 
 	scanResults := iiapi.ScanResult{
@@ -143,8 +147,9 @@ func (i *defaultImageInspector) Inspect() error {
 		if i.opts.ScanResultsDir, err = createOutputDir(i.opts.ScanResultsDir, "image-inspector-scan-results-"); err != nil {
 			return err
 		}
+		var results []iiapi.Result
 		scanner = openscap.NewDefaultScanner(OSCAP_CVE_DIR, i.opts.ScanResultsDir, i.opts.CVEUrlPath, i.opts.OpenScapHTML)
-		results, scanReport, htmlScanReport, err := i.scanImage(scanner)
+		results, scanReport, htmlScanReport, err = i.scanImage(scanner)
 		if err != nil {
 			// TODO
 			i.meta.OpenSCAP.SetError(err)
@@ -154,10 +159,6 @@ func (i *defaultImageInspector) Inspect() error {
 		}
 		scanResults.Results = append(scanResults.Results, results...)
 
-		if i.imageServer != nil {
-			return i.imageServer.ServeImage(&i.meta,
-				scanReport, htmlScanReport)
-		}
 	case "clamav":
 		scanner = clamav.NewScanner(i.opts.ClamSocket)
 		results, err := scanner.Scan(i.opts.DstPath, &i.meta.Image)
@@ -195,6 +196,10 @@ func (i *defaultImageInspector) Inspect() error {
 	// TODO: This deserves some pretty-printer
 	if len(scanResults.Results) > 0 {
 		log.Printf("DEBUG: %+#v", scanResults)
+	}
+
+	if i.imageServer != nil {
+		return i.imageServer.ServeImage(&i.meta, scanResults, scanReport, htmlScanReport)
 	}
 
 	return nil

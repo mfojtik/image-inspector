@@ -113,8 +113,9 @@ func (i *defaultImageInspector) Inspect() error {
 	)
 
 	scanResults := iiapi.ScanResult{
-		ImageName: i.opts.Image,
-		Results:   []iiapi.Result{},
+		APIVersion: iiapi.APIVersion,
+		ImageName:  i.opts.Image,
+		Results:    []iiapi.Result{},
 	}
 
 	if !i.opts.Local {

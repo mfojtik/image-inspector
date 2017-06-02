@@ -15,8 +15,13 @@ const (
 	StatusError        OpenSCAPStatus = "Error"
 )
 
+// The default version for the result API object
+const APIVersion = "v1"
+
 // ScanResult represents the compacted result of all scans performed on the image
 type ScanResult struct {
+	// APIVersion represents an API version for this result
+	APIVersion string `json:"apiVersion"`
 	// ImageName is a full pull spec of the input image
 	ImageName string `json:"imageName"`
 	// ImageIUD is a SHA256 identifier of the scanned image

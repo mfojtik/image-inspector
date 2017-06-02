@@ -135,7 +135,7 @@ func (i *defaultImageInspector) Inspect() error {
 		i.meta.Image = *imageMetadata
 		scanResults.ImageID = i.meta.Image.ID
 	} else {
-		log.Printf("Using local directory %q to scan image %q", i.opts.DstPath, i.opts.Image)
+		log.Printf("DEBUG: Using local directory %q to scan image %q", i.opts.DstPath, i.opts.Image)
 	}
 
 	switch i.opts.ScanType {
@@ -148,7 +148,7 @@ func (i *defaultImageInspector) Inspect() error {
 		if err != nil {
 			// TODO
 			i.meta.OpenSCAP.SetError(err)
-			log.Printf("Unable to scan image: %v", err)
+			log.Printf("DEBUG: Unable to scan image %q with OpenSCAP: %v", i.opts.Image, err)
 		} else {
 			i.meta.OpenSCAP.Status = iiapi.StatusSuccess
 		}
@@ -162,7 +162,7 @@ func (i *defaultImageInspector) Inspect() error {
 		scanner = clamav.NewScanner(i.opts.ClamSocket)
 		results, err := scanner.Scan(i.opts.DstPath, &i.meta.Image)
 		if err != nil {
-			log.Printf("Unable to scan image: %v", err)
+			log.Printf("DEBUG: Unable to scan image %q with ClamAV: %v", i.opts.Image, err)
 			return err
 		}
 		scanResults.Results = append(scanResults.Results, results...)
@@ -173,7 +173,7 @@ func (i *defaultImageInspector) Inspect() error {
 
 	if len(i.opts.PostResultURL) > 0 {
 		url := i.opts.PostResultURL + i.postTokenContent()
-		log.Printf("Posting scan results to %q ...", url)
+		log.Printf("DEBUG: Posting scan results to %q ...", url)
 		resultJSON, err := json.Marshal(scanResults)
 		if err != nil {
 			return err
@@ -181,18 +181,18 @@ func (i *defaultImageInspector) Inspect() error {
 		client := http.Client{}
 		req, err := http.NewRequest("POST", url, bytes.NewReader(resultJSON))
 		if err != nil {
-			log.Printf("Error preparing HTTP request: %v", err)
+			return err
 		}
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Printf("Error sending HTTP POST request to %q: %v", url, err)
-			return nil
+			return err
 		}
 		defer resp.Body.Close()
 		content, _ := ioutil.ReadAll(resp.Body)
 		log.Printf("DEBUG: Success: %d (%s)", resp.StatusCode, string(content))
 	}
 
+	// TODO: This deserves some pretty-printer
 	if len(scanResults.Results) > 0 {
 		log.Printf("DEBUG: %+#v", scanResults)
 	}
@@ -206,7 +206,7 @@ func (i *defaultImageInspector) postTokenContent() string {
 	}
 	token, err := ioutil.ReadFile(i.opts.PostResultTokenFile)
 	if err != nil {
-		log.Printf("ERROR: Unable to read the %q token file: %v", i.opts.PostResultTokenFile, err)
+		log.Printf("WARNING: Unable to read the %q token file: %v (no token will be used)", i.opts.PostResultTokenFile, err)
 		return ""
 	}
 	return fmt.Sprintf("?token=%s", strings.TrimSpace(string(token)))
@@ -223,12 +223,12 @@ func aggregateBytesAndReport(bytesChan chan int) {
 		select {
 		case bytes, open := <-bytesChan:
 			if !open {
-				log.Printf("Finished Downloading Image (%dKb downloaded)", bytesDownloaded/1024)
+				log.Printf("DEBUG: Image download finished (%dKb downloaded)", bytesDownloaded/1024)
 				return
 			}
 			bytesDownloaded += bytes
 		case <-ticker.C:
-			log.Printf("Downloading Image (%dKb downloaded)", bytesDownloaded/1024)
+			log.Printf("DEBUG: Download image (%dKb downloaded)", bytesDownloaded/1024)
 		}
 	}
 }

@@ -33,11 +33,11 @@ func main() {
 	flag.Parse()
 
 	if err := inspectorOptions.Validate(); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error: %v", err)
 	}
 
 	inspector := ii.NewDefaultImageInspector(*inspectorOptions)
 	if err := inspector.Inspect(); err != nil {
-		log.Fatalf("Error inspecting image: %v", err)
+		log.Fatalf("Error: %v", err)
 	}
 }

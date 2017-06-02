@@ -25,7 +25,9 @@ type ScanResult struct {
 	// ImageName is a full pull spec of the input image
 	ImageName string `json:"imageName"`
 	// ImageIUD is a SHA256 identifier of the scanned image
-	ImageID string `json:"imageID"`
+	// Note that we don't set the imageID when container is the target of the scan.
+	// FIXME: We should add ContainerID here in that case.
+	ImageID string `json:"imageID,omitempty"`
 	// Results contains compacted results of various scans performed on the image.
 	// Empty results means no problems were found with the given image.
 	Results []Result `json:"results,omitempty"`
